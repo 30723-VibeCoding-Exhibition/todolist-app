@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待辦清單</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 60px 20px;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #37352f;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-subtitle {
+            color: #787774;
+            font-size: 14px;
+            margin-left: 52px;
+        }
+
+        .input-container {
+            margin-bottom: 24px;
+            position: relative;
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: #f7f6f3;
+            border-radius: 3px;
+            padding: 8px 12px;
+            transition: background 0.2s;
+        }
+
+        .input-wrapper:hover {
+            background: #f1f0ed;
+        }
+
+        .add-btn {
+            background: #2383e2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 3px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .add-btn:hover {
+            background: #1a6dc4;
+        }
+
+        .add-btn:active {
+            transform: scale(0.98);
+        }
+
+        .input-icon {
+            color: #9b9a97;
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        #todoInput {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #37352f;
+        }
+
+        #todoInput:focus {
+            outline: none;
+        }
+
+        #todoInput::placeholder {
+            color: #9b9a97;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .divider {
+            width: 1px;
+            height: 20px;
+            background: #e0e0e0;
+            margin: 0 4px;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 12px;
+            color: #787774;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn:hover {
+            background: #f7f6f3;
+        }
+
+        .filter-btn.active {
+            background: #e9e8e6;
+            color: #37352f;
+        }
+
+        #todoList {
+            list-style: none;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 4px;
+            margin-bottom: 2px;
+            border-radius: 3px;
+            transition: background 0.15s;
+            cursor: grab;
+            group: item;
+        }
+
+        .todo-item:active {
+            cursor: grabbing;
+        }
+
+        .todo-item.dragging {
+            opacity: 0.5;
+            background: #e9e8e6;
+        }
+
+        .todo-item:hover {
+            background: #f7f6f3;
+        }
+
+        .todo-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .todo-item:hover .drag-handle {
+            opacity: 1;
+        }
+
+        .drag-handle {
+            color: #9b9a97;
+            cursor: grab;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.15s;
+            user-select: none;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #2383e2;
+        }
+
+        .todo-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            min-height: 27px;
+            gap: 8px;
+        }
+
+        .star-btn {
+            background: transparent;
+            border: none;
+            color: #d1d0cd;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 4px;
+            transition: all 0.15s;
+            line-height: 1;
+            opacity: 0;
+        }
+
+        .todo-item:hover .star-btn {
+            opacity: 1;
+        }
+
+        .star-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .star-btn.starred {
+            color: #f5c842;
+            opacity: 1;
+        }
+
+        .todo-item.starred {
+            background: #fffbf0;
+        }
+
+        .todo-item.starred:hover {
+            background: #fff8e1;
+        }
+
+        .todo-emoji {
+            font-size: 14px;
+            line-height: 1;
+            color: #37352f;
+            font-weight: 600;
+            min-width: 24px;
+        }
+
+        .todo-text {
+            flex: 1;
+            color: #37352f;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 3px 0;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #9b9a97;
+        }
+
+        .todo-item.completed .todo-emoji {
+            opacity: 0.3;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: #9b9a97;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            border-radius: 3px;
+            opacity: 0;
+            transition: all 0.15s;
+            line-height: 1;
+        }
+
+        .delete-btn:hover {
+            background: #e9e8e6;
+            color: #37352f;
+        }
+
+        .stats {
+            margin-top: 32px;
+            padding: 16px;
+            background: #f7f6f3;
+            border-radius: 3px;
+            color: #787774;
+            font-size: 12px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #9b9a97;
+            font-size: 14px;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 待辦清單</h1>
+            <div class="header-subtitle">管理你的每日任務</div>
+            <div class="header-subtitle" style="margin-top: 4px; font-size: 12px;">💾 資料會自動儲存在瀏覽器中</div>
+        </div>
+        
+        <div class="input-container">
+            <div class="input-wrapper">
+                <span class="input-icon">✏️</span>
+                <input type="text" id="todoInput" placeholder="新增待辦事項..." />
+            </div>
+            <button class="add-btn" id="addBtn">
+                <span>➕</span>
+                新增
+            </button>
+        </div>
+
+        <div class="filter-buttons">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">
+                    <span>📑</span>
+                    全部
+                </button>
+                <button class="filter-btn" data-filter="active">
+                    <span>⏳</span>
+                    進行中
+                </button>
+                <button class="filter-btn" data-filter="completed">
+                    <span>✅</span>
+                    已完成
+                </button>
+            </div>
+            <div class="divider"></div>
+            <div class="filter-group">
+                <button class="filter-btn" data-sort="manual">
+                    <span>✋</span>
+                    手動
+                </button>
+                <button class="filter-btn" data-sort="newest">
+                    <span>🆕</span>
+                    最新
+                </button>
+                <button class="filter-btn" data-sort="oldest">
+                    <span>📅</span>
+                    最舊
+                </button>
+                <button class="filter-btn" data-sort="az">
+                    <span>🔤</span>
+                    A-Z
+                </button>
+            </div>
+        </div>
+
+        <ul id="todoList"></ul>
+
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <script>
+        let todos = [];
+        let currentFilter = 'all';
+        let currentSort = 'manual';
+
+        const todoInput = document.getElementById('todoInput');
+        const addBtn = document.getElementById('addBtn');
+        const todoList = document.getElementById('todoList');
+        const stats = document.getElementById('stats');
+        const filterBtns = document.querySelectorAll('[data-filter]');
+        const sortBtns = document.querySelectorAll('[data-sort]');
+
+        let draggedItem = null;
+
+        const emojis = ['📌', '🎯', '💡', '📝', '🔖', '⭐', '🎨', '📚', '💼', '🏃'];
+
+        function getItemNumber() {
+            return todos.length + 1;
+        }
+
+        function loadTodos() {
+            const saved = localStorage.getItem('todos');
+            if (saved) {
+                todos = JSON.parse(saved);
+            }
+        }
+
+        function saveTodos() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function addTodo() {
+            const text = todoInput.value.trim();
+            if (text === '') return;
+
+            const todo = {
+                id: Date.now(),
+                text: text,
+                completed: false,
+                starred: false,
+                order: todos.length
+            };
+
+            todos.push(todo);
+            todoInput.value = '';
+            saveTodos();
+            renderTodos();
+        }
+
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveTodos();
+                renderTodos();
+            }
+        }
+
+        function toggleStar(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.starred = !todo.starred;
+                saveTodos();
+                renderTodos();
+            }
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(t => t.id !== id);
+            saveTodos();
+            renderTodos();
+        }
+
+        function renderTodos() {
+            let filteredTodos = todos.filter(todo => {
+                if (currentFilter === 'active') return !todo.completed;
+                if (currentFilter === 'completed') return todo.completed;
+                return true;
+            });
+
+            // 排序
+            filteredTodos = [...filteredTodos].sort((a, b) => {
+                // 星標項目永遠在前
+                if (a.starred && !b.starred) return -1;
+                if (!a.starred && b.starred) return 1;
+                
+                if (currentSort === 'manual') {
+                    return (a.order || 0) - (b.order || 0);
+                } else if (currentSort === 'newest') {
+                    return b.id - a.id;
+                } else if (currentSort === 'oldest') {
+                    return a.id - b.id;
+                } else if (currentSort === 'az') {
+                    return a.text.localeCompare(b.text, 'zh-TW');
+                }
+                return 0;
+            });
+
+            if (filteredTodos.length === 0) {
+                const emptyMessages = {
+                    all: { icon: '📭', text: '沒有待辦事項' },
+                    active: { icon: '🎉', text: '太棒了！所有事項都完成了' },
+                    completed: { icon: '📝', text: '還沒有已完成的事項' }
+                };
+                const message = emptyMessages[currentFilter];
+                todoList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">${message.icon}</div>
+                        <div>${message.text}</div>
+                    </div>
+                `;
+            } else {
+                todoList.innerHTML = filteredTodos.map((todo, index) => `
+                    <li class="todo-item ${todo.completed ? 'completed' : ''} ${todo.starred ? 'starred' : ''}" 
+                        data-id="${todo.id}" 
+                        draggable="${currentSort === 'manual' ? 'true' : 'false'}">
+                        ${currentSort === 'manual' ? '<span class="drag-handle">⋮⋮</span>' : ''}
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" class="checkbox" ${todo.completed ? 'checked' : ''} 
+                                   onchange="toggleTodo(${todo.id})">
+                        </div>
+                        <div class="todo-content">
+                            <button class="star-btn ${todo.starred ? 'starred' : ''}" onclick="toggleStar(${todo.id})">
+                                ${todo.starred ? '⭐' : '☆'}
+                            </button>
+                            <span class="todo-text">${todo.text}</span>
+                        </div>
+                        <button class="delete-btn" onclick="deleteTodo(${todo.id})">🗑️</button>
+                    </li>
+                `).join('');
+
+                if (currentSort === 'manual') {
+                    setupDragAndDrop();
+                }
+            }
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = todos.length;
+            const completed = todos.filter(t => t.completed).length;
+            const active = total - completed;
+            const starred = todos.filter(t => t.starred).length;
+            
+            stats.innerHTML = `
+                <div class="stat-item">
+                    <span>📊</span>
+                    總共 ${total} 項
+                </div>
+                <div class="stat-item">
+                    <span>⏳</span>
+                    ${active} 項進行中
+                </div>
+                <div class="stat-item">
+                    <span>✅</span>
+                    ${completed} 項已完成
+                </div>
+                <div class="stat-item">
+                    <span>⭐</span>
+                    ${starred} 項星標
+                </div>
+            `;
+        }
+
+        function setupDragAndDrop() {
+            const items = todoList.querySelectorAll('.todo-item');
+            
+            items.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedItem = item;
+                    item.classList.add('dragging');
+                });
+
+                item.addEventListener('dragend', (e) => {
+                    item.classList.remove('dragging');
+                    draggedItem = null;
+                });
+
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(todoList, e.clientY);
+                    if (afterElement == null) {
+                        todoList.appendChild(draggedItem);
+                    } else {
+                        todoList.insertBefore(draggedItem, afterElement);
+                    }
+                });
+
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    updateOrder();
+                });
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.todo-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function updateOrder() {
+            const items = todoList.querySelectorAll('.todo-item');
+            items.forEach((item, index) => {
+                const id = parseInt(item.dataset.id);
+                const todo = todos.find(t => t.id === id);
+                if (todo) {
+                    todo.order = index;
+                }
+            });
+            saveTodos();
+        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderTodos();
+            });
+        });
+
+        sortBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                sortBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSort = btn.dataset.sort;
+                renderTodos();
+            });
+        });
+
+        // 預設啟用手動排序按鈕
+        document.querySelector('[data-sort="manual"]').classList.add('active');
+
+        addBtn.addEventListener('click', addTodo);
+        
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTodo();
+        });
+
+        loadTodos();
+        renderTodos();
+    </script>
+</body>
+</html>
